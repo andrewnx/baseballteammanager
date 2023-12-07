@@ -23,6 +23,7 @@ def read_lineup():
         print("An error occurred while reading the file.")
         return []
 
+
 def add_player(name, position, at_bats, hits):
     avg = get_batting_avg(at_bats, hits)
     lineup = read_lineup()
@@ -62,3 +63,22 @@ def edit_player_stats(name, new_at_bats, new_hits):
             player[3] = new_hits
             player[4] = get_batting_avg(new_at_bats, new_hits)
     write_lineup(lineup)
+
+def get_player(name):
+    lineup = read_lineup()
+    player = next((p for p in lineup if p[0] == name), None)
+    return player
+
+def update_player(original_name, new_name, new_position, new_at_bats, new_hits):
+    lineup = read_lineup()
+    for player in lineup:
+        if player[0] == original_name:
+            player[0] = new_name
+            player[1] = new_position
+            player[2] = new_at_bats
+            player[3] = new_hits
+            player[4] = get_batting_avg(new_at_bats, new_hits)
+            break
+    write_lineup(lineup)
+
+

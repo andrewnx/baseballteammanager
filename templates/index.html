@@ -8,14 +8,17 @@
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
   </head>
   <body>
     <div class="container">
       <h1>Baseball Team Manager</h1>
-      <a href="{{ url_for('add_player') }}" class="btn btn-primary"
+      <a href="{{ url_for('add_player') }}" class="btn btn-primary mb-3"
         >Add Player</a
       >
-      <!-- Add buttons for edit and remove player -->
 
       <table class="table">
         <thead>
@@ -25,6 +28,7 @@
             <th>AB</th>
             <th>H</th>
             <th>AVG</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -35,6 +39,13 @@
             <td>{{ player[2] }}</td>
             <td>{{ player[3] }}</td>
             <td>{{ player[4] }}</td>
+            <td>
+              <a href="{{ url_for('edit_player', name=player[0]) }}">Edit</a>
+              |
+              <a href="{{ url_for('remove_player', name=player[0]) }}"
+                >Remove</a
+              >
+            </td>
           </tr>
           {% endfor %}
         </tbody>

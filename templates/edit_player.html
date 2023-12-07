@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Add Player</title>
+    <title>Edit Player</title>
+    <!-- Add Bootstrap for styling -->
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
@@ -14,58 +15,58 @@
   </head>
   <body>
     <div class="container">
-      <h1>Add Player</h1>
-      <form method="post" action="{{ url_for('add_player') }}">
+      <h1>Edit Player</h1>
+      <form method="post" action="{{ url_for('update_player') }}">
         {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
 
+        <input type="hidden" name="original_name" value="{{ player[0] }}" />
         <div class="form-group">
+          <label>Name</label>
           <input
             type="text"
             name="name"
             class="form-control"
-            placeholder="Player's Name"
+            value="{{ player[0] }}"
             required
           />
         </div>
         <div class="form-group">
+          <label>Position</label>
           <input
             type="text"
             name="position"
             class="form-control"
-            placeholder="Position (e.g., C, 1B)"
+            value="{{ player[1] }}"
             required
           />
         </div>
         <div class="form-group">
+          <label>At Bats</label>
           <input
             type="number"
             name="at_bats"
             class="form-control"
-            placeholder="At Bats"
+            value="{{ player[2] }}"
             required
           />
         </div>
         <div class="form-group">
+          <label>Hits</label>
           <input
             type="number"
             name="hits"
             class="form-control"
-            placeholder="Hits"
+            value="{{ player[3] }}"
             required
           />
         </div>
-        <button type="submit" class="btn btn-primary">Add Player</button>
+        <button type="submit" class="btn btn-primary">Update Player</button>
       </form>
       <a href="{{ url_for('index') }}" class="btn btn-secondary"
         >Back to Lineup</a
       >
     </div>
-
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
   </body>
 </html>
