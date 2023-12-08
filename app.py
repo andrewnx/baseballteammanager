@@ -37,12 +37,10 @@ class LoginForm(FlaskForm):
 def index():
     if current_user.is_authenticated:
         lineup = baseball_manager.get_players(current_user.id)
-        return render_template('index.html', lineup=lineup)
     else:
-        # Handle the case where the user is not logged in
-        # For example, redirect to the login page or show a message
-        return redirect(url_for('login'))  # Redirect to login, or choose a different action
+        lineup = []  # Empty list for unauthenticated users
 
+    return render_template('index.html', lineup=lineup, is_authenticated=current_user.is_authenticated)
 
 @app.route('/add_player', methods=['GET', 'POST'])
 def add_player():
