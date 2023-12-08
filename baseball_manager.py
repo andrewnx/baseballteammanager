@@ -1,4 +1,17 @@
-import csv
+from app import db, User, Player
+
+# Define the default lineup
+default_lineup = [
+    {"name": "Jordan Bell", "position": "P", "at_bats": 30, "hits": 5},
+    {"name": "John Doe", "position": "C", "at_bats": 50, "hits": 15},
+    {"name": "Jane Smith", "position": "1B", "at_bats": 70, "hits": 20},
+    {"name": "Mike Johnson", "position": "2B", "at_bats": 60, "hits": 18},
+    {"name": "Sarah Brown", "position": "3B", "at_bats": 55, "hits": 16},
+    {"name": "Alex Lee", "position": "SS", "at_bats": 65, "hits": 22},
+    {"name": "Chris Green", "position": "LF", "at_bats": 45, "hits": 12},
+    {"name": "Pat Morgan", "position": "CF", "at_bats": 80, "hits": 30},
+    {"name": "Taylor King", "position": "RF", "at_bats": 40, "hits": 10}
+]
 
 def get_batting_avg(at_bats, hits):
     if at_bats == 0:
@@ -6,79 +19,39 @@ def get_batting_avg(at_bats, hits):
     avg = hits / at_bats
     return round(avg, 3)
 
-def write_lineup(lineup):
-    try:
-        with open("line_up.csv", "w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerows(lineup)
-    except IOError:
-        print("An error occurred while writing to the file.")
+def clone_default_lineup_for_user(user_id):
+    for player_data in default_lineup:
+        avg = get_batting_avg(player_data["at_bats"], player_data["hits"])
+        new_player = Player(name=player_data["name"], position=player_data["position"],
+                            at_bats=player_data["at_bats"], hits=player_data["hits"],
+                            avg=avg, user_id=user_id)
+        db.session.add(new_player)
+    db.session.commit()
 
-def read_lineup():
-    try:
-        with open("line_up.csv", newline="") as file:
-            reader = csv.reader(file)
-            return list(reader)
-    except IOError:
-        print("An error occurred while reading the file.")
-        return []
+def get_players(user_id):
+    return Player.query.filter_by(user_id=user_id).all()
 
-
-def add_player(name, position, at_bats, hits):
+def add_player(name, position, at_bats, hits, user_id):
     avg = get_batting_avg(at_bats, hits)
-    lineup = read_lineup()
-    lineup.append([name, position, at_bats, hits, avg])
-    write_lineup(lineup)
+    new_player = Player(name=name, position=position, at_bats=at_bats, hits=hits, avg=avg, user_id=user_id)
+    db.session.add(new_player)
+    db.session.commit()
 
-def remove_player(name):
-    lineup = read_lineup()
-    lineup = [player for player in lineup if player[0] != name]
-    write_lineup(lineup)
+def update_player(player_id, name, position, at_bats, hits):
+    player = Player.query.get(player_id)
+    if player:
+        player.name = name
+        player.position = position
+        player.at_bats = at_bats
+        player.hits = hits
+        player.avg = get_batting_avg(at_bats, hits)
+        db.session.commit()
 
-def move_player(name, new_position):
-    lineup = read_lineup()
-    player_exists = any(name == player[0] for player in lineup)
-    if not player_exists:
-        return "Player not found in the lineup."
+def remove_player(player_id, user_id):
+    player_to_remove = Player.query.get(player_id)
+    if player_to_remove and player_to_remove.user_id == user_id:
+        db.session.delete(player_to_remove)
+        db.session.commit()
 
-    player_to_move = next(player for player in lineup if player[0] == name)
-    lineup.remove(player_to_move)
-    lineup.insert(new_position - 1, player_to_move)
-
-    write_lineup(lineup)
-    return "Player moved successfully."
-
-def edit_player_position(name, new_position):
-    lineup = read_lineup()
-    for player in lineup:
-        if player[0] == name:
-            player[1] = new_position
-    write_lineup(lineup)
-
-def edit_player_stats(name, new_at_bats, new_hits):
-    lineup = read_lineup()
-    for player in lineup:
-        if player[0] == name:
-            player[2] = new_at_bats
-            player[3] = new_hits
-            player[4] = get_batting_avg(new_at_bats, new_hits)
-    write_lineup(lineup)
-
-def get_player(name):
-    lineup = read_lineup()
-    player = next((p for p in lineup if p[0] == name), None)
-    return player
-
-def update_player(original_name, new_name, new_position, new_at_bats, new_hits):
-    lineup = read_lineup()
-    for player in lineup:
-        if player[0] == original_name:
-            player[0] = new_name
-            player[1] = new_position
-            player[2] = new_at_bats
-            player[3] = new_hits
-            player[4] = get_batting_avg(new_at_bats, new_hits)
-            break
-    write_lineup(lineup)
-
-
+def get_player(player_id):
+    return Player.query.get(player_id)
