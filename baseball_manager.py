@@ -1,4 +1,4 @@
-from app import db, User, Player
+from models import db, User, Player
 
 # Define the default lineup
 default_lineup = [
