@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate # Import Flask-Migrate
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 import baseball_manager
@@ -12,10 +14,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SECRET_KEY'] = 'fab2c24d650cb753060d20eb943b9a60'
 
 db.init_app(app)
+migrate = Migrate(app, db) # Initialize Flask-Migrate
+
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
@@ -58,7 +61,8 @@ def add_player():
             error_message = "Invalid position. Please enter a valid position."
 
         if not error_message:
-            baseball_manager.add_player(name, position, int(at_bats), int(hits))
+            user_id = current_user.id  # Get the current user's ID
+            baseball_manager.add_player(name, position, int(at_bats), int(hits), user_id)
             return redirect(url_for('index'))
 
     return render_template('add_player.html', error=error_message)
@@ -68,8 +72,7 @@ def remove_player(player_id):
     baseball_manager.remove_player(player_id, current_user.id)
     return redirect(url_for('index'))
 
-
-@app.route('/edit_player/<string:name>', methods=['GET'])
+@app.route('/edit_player/<int:player_id>', methods=['GET'])
 @login_required
 def edit_player(player_id):
     player = baseball_manager.get_player(player_id)
@@ -81,23 +84,32 @@ def edit_player(player_id):
 @login_required
 def update_player():
     error_message = None
-    original_name = request.form['original_name']
-    name = request.form['name']
-    position = request.form['position']
-    at_bats = request.form['at_bats']
-    hits = request.form['hits']
+    player_id = request.form.get('player_id')
+    original_name = request.form.get('original_name')
+    name = request.form.get('name', '')
+    position = request.form.get('position', '')
+    at_bats = request.form.get('at_bats', '')
+    hits = request.form.get('hits', '')
 
-    if not name or not position or not at_bats.isdigit() or not hits.isdigit():
-        error_message = "Invalid input. Please fill out all fields correctly."
-    elif position not in ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'P']:
-        error_message = "Invalid position. Please enter a valid position."
+    player = baseball_manager.get_player(player_id)
+    if player:
+        if name:
+            player.name = name
+        if position:
+            player.position = position
+        if at_bats.isdigit():
+            player.at_bats = int(at_bats)
+        if hits.isdigit():
+            player.hits = int(hits)
+        player.avg = baseball_manager.get_batting_avg(player.at_bats, player.hits)
+        db.session.commit()
+    else:
+        error_message = "Player not found."
 
-    if not error_message:
-        baseball_manager.update_player(original_name, name, position, int(at_bats), int(hits))
-        return redirect(url_for('index'))
+    if error_message:
+        return render_template('edit_player.html', player=[original_name, position, at_bats, hits], error=error_message)
 
-    player = [original_name, position, at_bats, hits]
-    return render_template('edit_player.html', player=player, error=error_message)
+    return redirect(url_for('index'))
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
