@@ -1,6 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate # Import Flask-Migrate
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 import baseball_manager
@@ -8,13 +6,18 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 from models import db, User, Player
+from flask_mongoengine import MongoEngine
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+import os
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SECRET_KEY'] = 'fab2c24d650cb753060d20eb943b9a60'
+app.config['MONGODB_SETTINGS'] = {
+    'db': os.environ.get('MONGO_DB_NAME'),
+    'host': os.environ.get('MONGO_URI')
+}
 
 db.init_app(app)
-migrate = Migrate(app, db) # Initialize Flask-Migrate
 
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
@@ -27,7 +30,7 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField('Sign Up')
 
     def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
+        user = User.objects(username=username.data).first()
         if user:
             raise ValidationError('That username is already taken. Please choose a different one.')
 
@@ -117,21 +120,21 @@ def register():
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User(username=form.username.data, password=hashed_password)
-        db.session.add(user)
-        db.session.commit()
+        user.save()
         baseball_manager.clone_default_lineup_for_user(user.id)
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.objects(pk=user_id).first()
+
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.objects(username=form.username.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
             return redirect(url_for('index'))

@@ -20,38 +20,36 @@ def get_batting_avg(at_bats, hits):
     return round(avg, 3)
 
 def clone_default_lineup_for_user(user_id):
+    user = User.objects.get(id=user_id)
     for player_data in default_lineup:
         avg = get_batting_avg(player_data["at_bats"], player_data["hits"])
-        new_player = Player(name=player_data["name"], position=player_data["position"],
-                            at_bats=player_data["at_bats"], hits=player_data["hits"],
-                            avg=avg, user_id=user_id)
-        db.session.add(new_player)
-    db.session.commit()
+        Player(name=player_data["name"], position=player_data["position"],
+               at_bats=player_data["at_bats"], hits=player_data["hits"],
+               avg=avg, user=user).save()
 
 def get_players(user_id):
-    return Player.query.filter_by(user_id=user_id).all()
+    return Player.objects(user=user_id)
 
 def add_player(name, position, at_bats, hits, user_id):
+    user = User.objects.get(id=user_id)
     avg = get_batting_avg(at_bats, hits)
-    new_player = Player(name=name, position=position, at_bats=at_bats, hits=hits, avg=avg, user_id=user_id)
-    db.session.add(new_player)
-    db.session.commit()
+    Player(name=name, position=position, at_bats=at_bats, hits=hits, avg=avg, user=user).save()
 
 def update_player(player_id, name, position, at_bats, hits):
-    player = Player.query.get(player_id)
+    player = Player.objects(id=player_id).first()
     if player:
-        player.name = name
-        player.position = position
-        player.at_bats = at_bats
-        player.hits = hits
-        player.avg = get_batting_avg(at_bats, hits)
-        db.session.commit()
+        player.update(
+            name=name,
+            position=position,
+            at_bats=at_bats,
+            hits=hits,
+            avg=get_batting_avg(at_bats, hits)
+        )
 
 def remove_player(player_id, user_id):
-    player_to_remove = Player.query.get(player_id)
-    if player_to_remove and player_to_remove.user_id == user_id:
-        db.session.delete(player_to_remove)
-        db.session.commit()
+    player_to_remove = Player.objects(id=player_id, user=user_id).first()
+    if player_to_remove:
+        player_to_remove.delete()
 
 def get_player(player_id):
-    return Player.query.get(player_id)
+    return Player.objects(id=player_id).first()
