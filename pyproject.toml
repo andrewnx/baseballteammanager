@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "your-application-name"
+version = "0.1.0"
+description = ""
+authors = ["andrewnx <architectonic@protonmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Flask = "^2.1.2"
+flask_bcrypt = "^1.0.1"
+flask_login = "^0.6.3"
+Flask-WTF = "^1.2.1"
+flask_mongoengine = "^1.0.0"
+WTForms = "^3.1.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
