@@ -85,13 +85,13 @@ def create_app():
 
         return render_template('add_player.html', error=error_message)
 
-    @app.route('/remove_player/<int:player_id>')
+    @app.route('/remove_player/<string:player_id>')
     def remove_player(player_id):
         user_id = current_user.get_id()
-        baseball_manager.remove_player(player_id, user_id)
+        baseball_manager.remove_player(mongo, ObjectId(player_id), user_id)
         return redirect(url_for('index'))
 
-    @app.route('/edit_player/<int:player_id>', methods=['GET'])
+    @app.route('/edit_player/<string:player_id>', methods=['GET'])
     @login_required
     def edit_player(player_id):
         player = baseball_manager.get_player(mongo, ObjectId(player_id))

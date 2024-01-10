@@ -80,11 +80,13 @@
             <td>{{ player.hits }}</td>
             <td>{{ player.avg }}</td>
             <td>
-              <a href="{{ url_for('edit_player', player_id=player._id) }}"
+              <a
+                href="{{ url_for('edit_player', player_id=player._id|string) }}"
                 >Edit</a
               >
               |
-              <a href="{{ url_for('remove_player', player_id=player._id) }}"
+              <a
+                href="{{ url_for('remove_player', player_id=player._id|string) }}"
                 >Remove</a
               >
             </td>
