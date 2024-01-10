@@ -62,3 +62,8 @@ def remove_player(mongo, player_id, user_id):
 def get_player(mongo, player_id):
     players_collection = mongo.db.players
     return players_collection.find_one({'_id': player_id})
+
+def add_user(mongo, user_data):
+    users_collection = mongo.db.users
+    new_user = users_collection.insert_one(user_data)
+    return new_user.inserted_id
