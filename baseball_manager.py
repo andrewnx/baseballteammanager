@@ -1,5 +1,3 @@
-from models import db, User, Player
-
 # Define the default lineup
 default_lineup = [
     {"name": "Jordan Bell", "position": "P", "at_bats": 30, "hits": 5},
@@ -19,37 +17,48 @@ def get_batting_avg(at_bats, hits):
     avg = hits / at_bats
     return round(avg, 3)
 
-def clone_default_lineup_for_user(user_id):
-    user = User.objects.get(id=user_id)
+def clone_default_lineup_for_user(mongo, user_id):
+    players_collection = mongo.db.players  # Access the 'players' collection
     for player_data in default_lineup:
-        avg = get_batting_avg(player_data["at_bats"], player_data["hits"])
-        Player(name=player_data["name"], position=player_data["position"],
-               at_bats=player_data["at_bats"], hits=player_data["hits"],
-               avg=avg, user=user).save()
+        player_data['user_id'] = user_id
+        player_data['avg'] = get_batting_avg(player_data["at_bats"], player_data["hits"])
+        players_collection.insert_one(player_data)
 
-def get_players(user_id):
-    return Player.objects(user=user_id)
+def get_players(mongo, user_id):
+    players_collection = mongo.db.players
+    return list(players_collection.find({'user_id': user_id}))
 
-def add_player(name, position, at_bats, hits, user_id):
-    user = User.objects.get(id=user_id)
+def add_player(mongo, name, position, at_bats, hits, user_id):
+    players_collection = mongo.db.players
     avg = get_batting_avg(at_bats, hits)
-    Player(name=name, position=position, at_bats=at_bats, hits=hits, avg=avg, user=user).save()
+    new_player = {
+        "name": name,
+        "position": position,
+        "at_bats": at_bats,
+        "hits": hits,
+        "avg": avg,
+        "user_id": user_id
+    }
+    players_collection.insert_one(new_player)
 
-def update_player(player_id, name, position, at_bats, hits):
-    player = Player.objects(id=player_id).first()
-    if player:
-        player.update(
-            name=name,
-            position=position,
-            at_bats=at_bats,
-            hits=hits,
-            avg=get_batting_avg(at_bats, hits)
-        )
+def update_player(mongo, player_id, name, position, at_bats, hits):
+    players_collection = mongo.db.players
+    avg = get_batting_avg(at_bats, hits)
+    players_collection.update_one(
+        {'_id': player_id},
+        {'$set': {
+            "name": name,
+            "position": position,
+            "at_bats": at_bats,
+            "hits": hits,
+            "avg": avg
+        }}
+    )
 
-def remove_player(player_id, user_id):
-    player_to_remove = Player.objects(id=player_id, user=user_id).first()
-    if player_to_remove:
-        player_to_remove.delete()
+def remove_player(mongo, player_id, user_id):
+    players_collection = mongo.db.players
+    players_collection.delete_one({'_id': player_id, 'user_id': user_id})
 
-def get_player(player_id):
-    return Player.objects(id=player_id).first()
+def get_player(mongo, player_id):
+    players_collection = mongo.db.players
+    return players_collection.find_one({'_id': player_id})

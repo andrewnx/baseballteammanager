@@ -5,19 +5,15 @@ import baseball_manager
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
-from models import db, User, Player
-from flask_mongoengine import MongoEngine
+from flask_pymongo import PyMongo
 import os
+
+mongo = PyMongo()
 
 def create_app():
     app = Flask(__name__)
-    app.config['MONGODB_SETTINGS'] = {
-        'db': os.environ.get('MONGODB_DB'),
-        'host': os.environ.get('MONGODB_HOST')
-    }
-
-
-    db.init_app(app)
+    app.config["MONGODB_URI"] = os.environ.get('MONGODB_DB')
+    mongo.init_app(app)
 
     bcrypt = Bcrypt(app)
     login_manager = LoginManager(app)
@@ -30,7 +26,8 @@ def create_app():
         submit = SubmitField('Sign Up')
 
         def validate_username(self, username):
-            user = User.objects(username=username.data).first()
+            users_collection = mongo.db.users
+            user = users_collection.find_one({'username': username.data})
             if user:
                 raise ValidationError('That username is already taken. Please choose a different one.')
 
@@ -42,14 +39,14 @@ def create_app():
     @app.route('/')
     def index():
         if current_user.is_authenticated:
-            lineup = baseball_manager.get_players(current_user.id)
+            lineup = baseball_manager.get_players(mongo, current_user['_id'])
         else:
             lineup = []  # Empty list for unauthenticated users
 
         return render_template('index.html', lineup=lineup, is_authenticated=current_user.is_authenticated)
 
     @app.route('/add_player', methods=['GET', 'POST'])
-    def add_player():
+    def add_player_route():
         error_message = None
         if request.method == 'POST':
             name = request.form['name']
@@ -64,8 +61,8 @@ def create_app():
                 error_message = "Invalid position. Please enter a valid position."
 
             if not error_message:
-                user_id = current_user.id  # Get the current user's ID
-                baseball_manager.add_player(name, position, int(at_bats), int(hits), user_id)
+                user_id = current_user.id
+                baseball_manager.add_player(mongo, name, position, int(at_bats), int(hits), current_user['_id'])
                 return redirect(url_for('index'))
 
         return render_template('add_player.html', error=error_message)
@@ -78,7 +75,7 @@ def create_app():
     @app.route('/edit_player/<int:player_id>', methods=['GET'])
     @login_required
     def edit_player(player_id):
-        player = baseball_manager.get_player(player_id)
+        player = baseball_manager.get_player(mongo, player_id)
         if player is None:
             return redirect(url_for('index'))  # Redirect if player not found
         return render_template('edit_player.html', player=player)
@@ -94,7 +91,7 @@ def create_app():
         at_bats = request.form.get('at_bats', '')
         hits = request.form.get('hits', '')
 
-        player = baseball_manager.get_player(player_id)
+        player = baseball_manager.get_player(mongo, player_id)
         if player:
             if name:
                 player.name = name
@@ -105,7 +102,6 @@ def create_app():
             if hits.isdigit():
                 player.hits = int(hits)
             player.avg = baseball_manager.get_batting_avg(player.at_bats, player.hits)
-            db.session.commit()
         else:
             error_message = "Player not found."
 
@@ -119,15 +115,15 @@ def create_app():
         form = RegistrationForm()
         if form.validate_on_submit():
             hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-            user = User(username=form.username.data, password=hashed_password)
-            user.save()
-            baseball_manager.clone_default_lineup_for_user(user.id)
+            user_data = {'username': form.username.data, 'password': hashed_password}
+            user_id = baseball_manager.add_user(mongo, user_data)
+            baseball_manager.clone_default_lineup_for_user(mongo, user_id)
             return redirect(url_for('login'))
         return render_template('register.html', title='Register', form=form)
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.objects(pk=user_id).first()
+        return mongo.db.users.find_one({'_id': user_id})
 
 
     @app.route("/login", methods=['GET', 'POST'])
