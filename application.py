@@ -7,8 +7,25 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 from flask_pymongo import PyMongo
 import os
+from bson import ObjectId
 
 mongo = PyMongo()
+
+class User:
+    def __init__(self, user_data):
+        self.user_data = user_data
+
+    def is_active(self):
+        return True
+
+    def is_authenticated(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.user_data['_id'])
 
 def create_app():
     app = Flask(__name__)
@@ -122,23 +139,25 @@ def create_app():
             return redirect(url_for('login'))
         return render_template('register.html', title='Register', form=form)
 
-    @login_manager.user_loader
-    def load_user(user_id):
-        return mongo.db.users.find_one({'_id': user_id})
-
-
     @app.route("/login", methods=['GET', 'POST'])
     def login():
         form = LoginForm()
         if form.validate_on_submit():
-            user = baseball_manager.get_user(mongo, form.username.data)
+            users_collection = mongo.db.users
+            user = users_collection.find_one({'username': form.username.data})
             if user and bcrypt.check_password_hash(user['password'], form.password.data):
-                login_user(user)
+                user_obj = User(user)  # Wrap dict in User class
+                login_user(user_obj)
                 return redirect(url_for('index'))
             else:
-                # Flash a message to the user indicating login failure
                 flash('Login Unsuccessful. Please check username and password', 'danger')
         return render_template('login.html', title='Login', form=form)
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        users_collection = mongo.db.users
+        user = users_collection.find_one({'_id': ObjectId(user_id)})
+        return User(user) if user else None
 
     @app.route('/logout')
     @login_required
