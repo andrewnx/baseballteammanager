@@ -8,6 +8,8 @@ from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 from flask_pymongo import PyMongo
 import os
 from bson import ObjectId
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 mongo = PyMongo()
 
@@ -58,7 +60,9 @@ def create_app():
     def index():
         if current_user.is_authenticated:
             user_id = current_user.get_id()  # Use get_id() method to get the user's ID
+            logging.debug(f"Fetching lineup for user_id: {user_id}")
             lineup = baseball_manager.get_players(mongo, user_id)
+            logging.debug(f"Lineup: {lineup}")
         else:
             lineup = []  # Empty list for unauthenticated users
 

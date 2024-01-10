@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.DEBUG)
 # Define the default lineup
 default_lineup = [
     {"name": "Jordan Bell", "position": "P", "at_bats": 30, "hits": 5},
@@ -22,6 +24,7 @@ def clone_default_lineup_for_user(mongo, user_id):
     for player_data in default_lineup:
         player_data['user_id'] = user_id
         player_data['avg'] = get_batting_avg(player_data["at_bats"], player_data["hits"])
+        logging.debug(f"Cloning player for user {user_id}: {player_data}")
         players_collection.insert_one(player_data)
 
 def get_players(mongo, user_id):
