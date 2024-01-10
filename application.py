@@ -65,7 +65,7 @@ def create_app():
         return render_template('index.html', lineup=lineup, is_authenticated=current_user.is_authenticated)
 
     @app.route('/add_player', methods=['GET', 'POST'])
-    def add_player_route():
+    def add_player():
         error_message = None
         if request.method == 'POST':
             name = request.form['name']
