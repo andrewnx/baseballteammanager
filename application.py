@@ -108,13 +108,14 @@ def create_app():
     def update_player():
         error_message = None
         player_id = request.form.get('player_id')
+        player_id = ObjectId(player_id)
         original_name = request.form.get('original_name')
         name = request.form.get('name', '')
         position = request.form.get('position', '')
         at_bats = request.form.get('at_bats', '')
         hits = request.form.get('hits', '')
 
-        player = baseball_manager.get_player(mongo, player_id)
+        player = baseball_manager.get_player(mongo, ObjectId(player_id))
         if player:
             if name:
                 player.name = name

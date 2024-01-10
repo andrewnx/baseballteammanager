@@ -1,3 +1,4 @@
+from bson import ObjectId
 import logging
 logging.basicConfig(level=logging.DEBUG)
 # Define the default lineup
@@ -48,7 +49,7 @@ def update_player(mongo, player_id, name, position, at_bats, hits):
     players_collection = mongo.db.players
     avg = get_batting_avg(at_bats, hits)
     players_collection.update_one(
-        {'_id': player_id},
+        {'_id': ObjectId(player_id)},
         {'$set': {
             "name": name,
             "position": position,
