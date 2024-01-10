@@ -57,7 +57,8 @@ def create_app():
     @app.route('/')
     def index():
         if current_user.is_authenticated:
-            lineup = baseball_manager.get_players(mongo, current_user['_id'])
+            user_id = current_user.get_id()  # Use get_id() method to get the user's ID
+            lineup = baseball_manager.get_players(mongo, user_id)
         else:
             lineup = []  # Empty list for unauthenticated users
 
@@ -79,15 +80,15 @@ def create_app():
                 error_message = "Invalid position. Please enter a valid position."
 
             if not error_message:
-                user_id = current_user.id
-                baseball_manager.add_player(mongo, name, position, int(at_bats), int(hits), current_user['_id'])
-                return redirect(url_for('index'))
+                user_id = current_user.get_id()
+                baseball_manager.add_player(mongo, name, position, int(at_bats), int(hits), user_id)
 
         return render_template('add_player.html', error=error_message)
 
     @app.route('/remove_player/<int:player_id>')
     def remove_player(player_id):
-        baseball_manager.remove_player(player_id, current_user.id)
+        user_id = current_user.get_id()
+        baseball_manager.remove_player(player_id, user_id)
         return redirect(url_for('index'))
 
     @app.route('/edit_player/<int:player_id>', methods=['GET'])
