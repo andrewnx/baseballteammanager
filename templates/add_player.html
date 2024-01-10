@@ -15,7 +15,7 @@
   <body>
     <div class="container">
       <h1>Add Player</h1>
-      <form method="post" action="{{ url_for('add_player') }}">
+      <form method="post" action="{{ url_for('add_player_route') }}">
         {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
