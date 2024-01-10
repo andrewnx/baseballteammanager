@@ -22,7 +22,7 @@
         {% endif %}
 
         <!-- Hidden input for player_id -->
-        <input type="hidden" name="player_id" value="{{ player.id }}" />
+        <input type="hidden" name="player_id" value="{{ player._id }}" />
 
         <!-- Original name, used for reference in case of changes -->
         <input type="hidden" name="original_name" value="{{ player.name }}" />

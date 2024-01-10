@@ -94,7 +94,7 @@ def create_app():
     @app.route('/edit_player/<int:player_id>', methods=['GET'])
     @login_required
     def edit_player(player_id):
-        player = baseball_manager.get_player(mongo, player_id)
+        player = baseball_manager.get_player(mongo, ObjectId(player_id))
         if player is None:
             return redirect(url_for('index'))  # Redirect if player not found
         return render_template('edit_player.html', player=player)
