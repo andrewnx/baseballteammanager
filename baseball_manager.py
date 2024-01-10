@@ -67,3 +67,7 @@ def add_user(mongo, user_data):
     users_collection = mongo.db.users
     new_user = users_collection.insert_one(user_data)
     return new_user.inserted_id
+
+def get_user(mongo, username):
+    users_collection = mongo.db.users
+    return users_collection.find_one({'username': username})

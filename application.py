@@ -131,7 +131,7 @@ def create_app():
     def login():
         form = LoginForm()
         if form.validate_on_submit():
-            user = User.objects(username=form.username.data).first()
+            user = baseball_manager.get_user(mongo, form.username.data)
             if user and bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
                 return redirect(url_for('index'))
