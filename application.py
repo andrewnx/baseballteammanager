@@ -13,6 +13,7 @@ mongo = PyMongo()
 def create_app():
     app = Flask(__name__)
     app.config["MONGO_URI"] = os.environ.get('MONGODB_URI')
+    app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY') or 'fgqAaLGwkP'
     mongo.init_app(app)
 
     bcrypt = Bcrypt(app)
