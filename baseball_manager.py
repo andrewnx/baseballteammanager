@@ -30,7 +30,7 @@ def clone_default_lineup_for_user(mongo, user_id):
 
 def get_players(mongo, user_id):
     players_collection = mongo.db.players
-    return list(players_collection.find({'user_id': user_id}))
+    return list(players_collection.find({'user_id':  ObjectId(user_id)}))
 
 def add_player(mongo, name, position, at_bats, hits, user_id):
     players_collection = mongo.db.players

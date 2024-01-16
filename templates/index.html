@@ -72,33 +72,30 @@
           </tr>
         </thead>
         <tbody>
-          {% if lineup %} {% for player in lineup %}
+          {% if lineup %} {% if lineup|length > 0 %} {% for player in lineup %}
           <tr>
-            <td>{{ player.name }}</td>
-            <td>{{ player.position }}</td>
-            <td>{{ player.at_bats }}</td>
-            <td>{{ player.hits }}</td>
-            <td>{{ player.avg }}</td>
+            <td>{{ player['name'] }}</td>
+            <td>{{ player['position'] }}</td>
+            <td>{{ player['at_bats'] }}</td>
+            <td>{{ player['hits'] }}</td>
+            <td>{{ player['avg'] }}</td>
             <td>
               <a
-                href="{{ url_for('edit_player', player_id=player._id|string) }}"
+                href="{{ url_for('edit_player', player_id=player['_id']|string) }}"
                 >Edit</a
               >
               |
               <a
-                href="{{ url_for('remove_player', player_id=player._id|string) }}"
+                href="{{ url_for('remove_player', player_id=player['_id']|string) }}"
                 >Remove</a
               >
             </td>
           </tr>
           {% endfor %} {% else %}
           <tr>
-            <td colspan="6">
-              No players in your lineup. Add some players
-              <a href="{{ url_for('add_player_route') }}">here</a>.
-            </td>
+            <td colspan="6">No players in your lineup.</td>
           </tr>
-          {% endif %}
+          {% endif %} {% endif %}
         </tbody>
       </table>
       {% else %}
